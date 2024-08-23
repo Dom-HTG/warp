@@ -14,10 +14,9 @@ var port string = os.Getenv("APP_PORT")
 
 func main() {
 	r := mux.NewRouter()
-	r.HandleFunc("/signin", controllers.SignInHandler)
+	r.HandleFunc("/signin", controllers.SignInHandler).Methods("GET")
 
-	http.Handle("/", r)
-	err := http.ListenAndServe(port, nil)
+	err := http.ListenAndServe(fmt.Sprintf(":%s", port), r)
 	if err != nil {
 		log.Fatal(err)
 	}
