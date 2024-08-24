@@ -13,9 +13,14 @@ import (
 var port string = os.Getenv("APP_PORT")
 
 func main() {
+	//Instantiate new router.
 	r := mux.NewRouter()
-	r.HandleFunc("/signin", controllers.SignInHandler).Methods("GET")
 
+	//Handle request multiplexing.
+	r.HandleFunc("/signin", controllers.SignInHandler).Methods("GET")
+	r.HandleFunc("/callback", controllers.CallbackHandler).Methods()
+
+	//Run the server.
 	err := http.ListenAndServe(fmt.Sprintf(":%s", port), r)
 	if err != nil {
 		log.Fatal(err)

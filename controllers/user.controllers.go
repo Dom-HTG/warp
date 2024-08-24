@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+
+	"github.com/Dom-HTG/warp/utils"
 )
 
 type AuthParams struct {
@@ -31,7 +33,7 @@ func getState() string {
 func SignInHandler(w http.ResponseWriter, r *http.Request) {
 	//Get authorization endpoint.
 	baseURL := os.Getenv("BASE_URL")
-	auth_endpoint := fmt.Sprintf("%s/authotize", baseURL)
+	auth_endpoint := fmt.Sprintf("%s/authorize", baseURL)
 	u, err := url.Parse(auth_endpoint)
 	if err != nil {
 		log.Fatal(err)
@@ -61,4 +63,21 @@ func SignInHandler(w http.ResponseWriter, r *http.Request) {
 	newURL := u.String()
 
 	http.Redirect(w, r, newURL, http.StatusFound)
+}
+
+func CallbackHandler(w http.ResponseWriter, r *http.Request) {
+	//This callback retrieves the code and state sent back by the spotify service.
+	//Create a query object on the request object.
+	requery := r.URL.Query()
+	authCode := requery.Get("code")
+	state := requery.Get("state")
+
+	//Exchange authorization code for access token and refresh token.
+	tokenData, err := utils.GetAccessToken(authCode)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	w.Write(tokenData)
+	w.WriteHeader(http.StatusOK)
 }
