@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func GetAccessToken(authCode string) (string, error) {
+func GetAccessToken(authCode string) ([]byte, error) {
 	exURL := os.Getenv("EXCHANGE_URL")
 	redirectURI := os.Getenv("REDIRECT_URI")
 	clientID := os.Getenv("CLIENT_ID")
@@ -33,7 +33,7 @@ func GetAccessToken(authCode string) (string, error) {
 	//Make http request to url.
 	req, err := http.NewRequest(http.MethodPost, exURL, body)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	//Set headers.
@@ -44,15 +44,15 @@ func GetAccessToken(authCode string) (string, error) {
 	client := &http.Client{}
 	response, err1 := client.Do(req)
 	if err1 != nil {
-		return "", err1
+		return nil, err1
 	}
 	defer response.Body.Close()
 
 	//Read response body.
 	respBody, err2 := io.ReadAll(response.Body)
 	if err2 != nil {
-		return "", err2
+		return nil, err2
 	}
 
-	return string(respBody), nil
+	return respBody, nil
 }
