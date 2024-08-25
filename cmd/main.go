@@ -9,11 +9,18 @@ import (
 	"github.com/Dom-HTG/warp/controllers"
 	"github.com/Dom-HTG/warp/utils"
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 )
 
 var port string = os.Getenv("APP_PORT")
 
 func main() {
+	//load .env file.
+	err0 := godotenv.Load()
+	if err0 != nil {
+		log.Fatal(err0)
+	}
+
 	//Instantiate new router.
 	r := mux.NewRouter()
 
