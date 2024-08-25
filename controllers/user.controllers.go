@@ -1,36 +1,35 @@
 package controllers
 
 import (
-	"crypto/rand"
-	"encoding/hex"
 	"fmt"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
 
+	"github.com/Dom-HTG/warp/models"
 	"github.com/Dom-HTG/warp/utils"
+	"gorm.io/gorm"
 )
 
-type AuthParams struct {
-	ClientID     string
-	ResponseType string
-	RedirectURI  string
-	State        string
-	Scope        string
-	ShowDialog   string
+type Handlers interface {
+	SignInHandler(w http.ResponseWriter, r *http.Request)
+	CallbackHandler(w http.ResponseWriter, r *http.Request)
 }
 
-func getState() string {
-	bytes := make([]byte, 16)
-	_, err := rand.Read(bytes)
-	if err != nil {
-		panic(err)
+type repo struct {
+	db *gorm.DB
+}
+
+func NewRepo(db *gorm.DB) *repo {
+	return &repo{
+		db: db,
 	}
-	return hex.EncodeToString(bytes)
 }
 
-func SignInHandler(w http.ResponseWriter, r *http.Request) {
+var globalStateID uint
+
+func (rp repo) SignInHandler(w http.ResponseWriter, r *http.Request) {
 	//Get authorization endpoint.
 	baseURL := os.Getenv("BASE_URL")
 	auth_endpoint := fmt.Sprintf("%s/authorize", baseURL)
@@ -39,14 +38,27 @@ func SignInHandler(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
-	newAuthParams := &AuthParams{
+	newAuthParams := &models.AuthParams{
 		ClientID:     os.Getenv("CLIENT_ID"),
 		ResponseType: "code",
 		RedirectURI:  os.Getenv("REDIRECT_URI"),
-		State:        getState(),
+		State:        utils.GenerateState(),
 		Scope:        "user-top-read",
 		ShowDialog:   "false",
 	}
+
+	//Store state to the database.
+	state := &models.User{
+		StateValue: utils.GenerateState(),
+	}
+
+	tx := rp.db.Create(&state)
+	if tx.Error != nil {
+		log.Fatalf("unable to save state to DB: %v", tx.Error)
+	}
+
+	//store state ID in global variable.
+	globalStateID = state.ID
 
 	//create query object and populate queries.
 	query := u.Query()
@@ -65,17 +77,31 @@ func SignInHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, newURL, http.StatusFound)
 }
 
-func CallbackHandler(w http.ResponseWriter, r *http.Request) {
-	//This callback retrieves the code and state sent back by the spotify service.
+func (rp repo) CallbackHandler(w http.ResponseWriter, r *http.Request) {
+	//This callback retrieves the code(authorization code) and state sent back by the spotify service.
 	//Create a query object on the request object.
 	requery := r.URL.Query()
 	authCode := requery.Get("code")
 	state := requery.Get("state")
 
-	//Exchange authorization code for access token and refresh token.
-	tokenData, err := utils.GetAccessToken(authCode)
+	//get state ID from globalStateID variable.
+	id := globalStateID
+
+	//get state values from database.
+	DBstate, err := utils.GetStateDB(rp.db, id)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	//compare state values.
+	if state != DBstate {
+		log.Fatal("state mismatch")
+	}
+
+	//Exchange authorization code for access token and refresh token.
+	tokenData, err1 := utils.GetAccessToken(authCode)
+	if err1 != nil {
+		log.Fatal(err1)
 	}
 
 	w.Write(tokenData)

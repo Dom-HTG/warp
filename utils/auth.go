@@ -1,11 +1,18 @@
 package utils
 
 import (
+	"crypto/rand"
+	"encoding/hex"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
+
+	"github.com/Dom-HTG/warp/models"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 func GetAccessToken(authCode string) ([]byte, error) {
@@ -55,4 +62,45 @@ func GetAccessToken(authCode string) ([]byte, error) {
 	}
 
 	return respBody, nil
+}
+
+func GenerateState() string {
+	bytes := make([]byte, 16)
+	_, err := rand.Read(bytes)
+	if err != nil {
+		panic(err)
+	}
+	return hex.EncodeToString(bytes)
+}
+
+func GetStateDB(db *gorm.DB, id uint) (string, error) {
+	var userData models.User
+	tx := db.Where("id = ?", id).First(&userData)
+	if tx.Error != nil {
+		return "", tx.Error
+	}
+	return userData.StateValue, nil
+}
+
+func InitDB() (*gorm.DB, error) {
+	//construct postgres URL.
+	host := os.Getenv("DB_HOST")
+	user := os.Getenv("DB_USER")
+	password := os.Getenv("DB_PASSWORD")
+	dbname := os.Getenv("DB_NAME")
+	port := os.Getenv("DB_PORT")
+	sslmode := os.Getenv("DB_SSLMODE")
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s", host, user, password, dbname, port, sslmode)
+
+	//start the database.
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		return nil, err
+	}
+
+	if err1 := db.AutoMigrate(&models.User{}); err1 != nil {
+		return nil, err1
+	}
+
+	return db, nil
 }

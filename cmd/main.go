@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/Dom-HTG/warp/controllers"
+	"github.com/Dom-HTG/warp/utils"
 	"github.com/gorilla/mux"
 )
 
@@ -16,14 +17,23 @@ func main() {
 	//Instantiate new router.
 	r := mux.NewRouter()
 
-	//Handle request multiplexing.
-	r.HandleFunc("/signin", controllers.SignInHandler).Methods("GET")
-	r.HandleFunc("/callback", controllers.CallbackHandler).Methods()
-
-	//Run the server.
-	err := http.ListenAndServe(fmt.Sprintf(":%s", port), r)
+	//Instantiate new DB connection.
+	db, err := utils.InitDB()
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	//depependency injection.
+	controller := controllers.NewRepo(db)
+
+	//Handle request multiplexing.
+	r.HandleFunc("/signin", controller.SignInHandler).Methods("GET")
+	r.HandleFunc("/callback", controller.CallbackHandler).Methods("GET")
+
+	//Run the server.
+	err1 := http.ListenAndServe(fmt.Sprintf(":%s", port), r)
+	if err1 != nil {
+		log.Fatal(err1)
 	}
 	fmt.Printf("server is running on port %s\n", port)
 }
