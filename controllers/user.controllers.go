@@ -9,6 +9,7 @@ import (
 
 	"github.com/Dom-HTG/warp/models"
 	"github.com/Dom-HTG/warp/utils"
+	"github.com/goccy/go-json"
 	"gorm.io/gorm"
 )
 
@@ -45,8 +46,11 @@ func (rp repo) SignInHandler(w http.ResponseWriter, r *http.Request) {
 		ResponseType: "code",
 		RedirectURI:  os.Getenv("REDIRECT_URI"),
 		State:        stateData,
-		Scope:        "user-top-read",
-		ShowDialog:   "false",
+		Scope:        "user-top-read user-read-private user-read-email",
+		//user-top-read allows access to the users' top tracks and top artists.
+		//user-read-private allows access to the users' private data.
+		//user-read-email allows access to the users' email address.
+		ShowDialog: "false",
 	}
 
 	//Store state to the database.
@@ -101,12 +105,14 @@ func (rp repo) CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Exchange authorization code for access token and refresh token.
-	tokenData, err1 := utils.GetAccessToken(authCode)
+	tokenPayload, err1 := utils.GetAccessToken(authCode)
 	if err1 != nil {
 		log.Fatal(err1)
 	}
 
-	w.Write(tokenData)
+	fmt.Print(tokenPayload)
+
+	json.NewEncoder(w).Encode(tokenPayload)
 	w.WriteHeader(http.StatusOK)
 }
 

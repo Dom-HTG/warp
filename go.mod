@@ -3,6 +3,7 @@ module github.com/Dom-HTG/warp
 go 1.22.4
 
 require (
+	github.com/goccy/go-json v0.10.3
 	github.com/gorilla/mux v1.8.1
 	github.com/joho/godotenv v1.5.1
 	gorm.io/driver/postgres v1.5.9
