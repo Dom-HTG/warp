@@ -38,18 +38,20 @@ func (rp repo) SignInHandler(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
+	stateData := utils.GenerateState()
+
 	newAuthParams := &models.AuthParams{
 		ClientID:     os.Getenv("CLIENT_ID"),
 		ResponseType: "code",
 		RedirectURI:  os.Getenv("REDIRECT_URI"),
-		State:        utils.GenerateState(),
+		State:        stateData,
 		Scope:        "user-top-read",
 		ShowDialog:   "false",
 	}
 
 	//Store state to the database.
 	state := &models.User{
-		StateValue: utils.GenerateState(),
+		StateValue: stateData,
 	}
 
 	tx := rp.db.Create(&state)
@@ -106,4 +108,8 @@ func (rp repo) CallbackHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Write(tokenData)
 	w.WriteHeader(http.StatusOK)
+}
+
+func (rp repo) HomeHandler(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("welcome to warp home"))
 }

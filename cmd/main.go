@@ -12,8 +12,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-var port string = os.Getenv("APP_PORT")
-
 func main() {
 	//load .env file.
 	err0 := godotenv.Load()
@@ -29,6 +27,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println("Database initialized and connected.")
 
 	//depependency injection.
 	controller := controllers.NewRepo(db)
@@ -36,11 +35,14 @@ func main() {
 	//Handle request multiplexing.
 	r.HandleFunc("/signin", controller.SignInHandler).Methods("GET")
 	r.HandleFunc("/callback", controller.CallbackHandler).Methods("GET")
+	r.HandleFunc("/home", controller.HomeHandler).Methods("GET")
 
 	//Run the server.
+	port := os.Getenv("APP_PORT")
+	fmt.Printf("server is running on port %s\n", port)
 	err1 := http.ListenAndServe(fmt.Sprintf(":%s", port), r)
 	if err1 != nil {
 		log.Fatal(err1)
 	}
-	fmt.Printf("server is running on port %s\n", port)
+
 }

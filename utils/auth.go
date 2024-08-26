@@ -100,6 +100,6 @@ func InitDB() (*gorm.DB, error) {
 	if err1 := db.AutoMigrate(&models.User{}); err1 != nil {
 		return nil, err1
 	}
-
+	fmt.Print("mode migration success")
 	return db, nil
 }
