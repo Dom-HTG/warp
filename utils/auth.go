@@ -53,7 +53,7 @@ func GetAccessToken(authCode string) (*models.AccessTokenPayload, error) {
 	if err1 != nil {
 		return &models.AccessTokenPayload{}, err1
 	}
-	defer response.Body.Close()
+	// defer response.Body.Close()
 
 	payload := &models.AccessTokenPayload{}
 	json.NewDecoder(response.Body).Decode(&payload)

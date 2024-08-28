@@ -33,8 +33,7 @@ var globalStateID uint
 func (rp repo) SignInHandler(w http.ResponseWriter, r *http.Request) {
 	//Get authorization endpoint.
 	baseURL := os.Getenv("BASE_URL")
-	auth_endpoint := fmt.Sprintf("%s/authorize", baseURL)
-	u, err := url.Parse(auth_endpoint)
+	u, err := url.Parse(baseURL)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -98,19 +97,19 @@ func (rp repo) CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Print("state fetched from database")
 
 	//compare state values.
 	if state != DBstate {
 		log.Fatal("state mismatch")
 	}
+	fmt.Print("state matched")
 
 	//Exchange authorization code for access token and refresh token.
 	tokenPayload, err1 := utils.GetAccessToken(authCode)
 	if err1 != nil {
 		log.Fatal(err1)
 	}
-
-	fmt.Print(tokenPayload)
 
 	json.NewEncoder(w).Encode(tokenPayload)
 	w.WriteHeader(http.StatusOK)
