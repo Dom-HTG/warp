@@ -65,14 +65,8 @@ func GetAccessToken(authCode string) (*models.AccessTokenPayload, error) {
 	if err3 != nil {
 		return nil, err3
 	}
-	fmt.Print(string(respBytes))
 
 	payload := &models.AccessTokenPayload{}
-	// err2 := json.NewDecoder(response.Body).Decode(&payload)
-	// if err2 != nil {
-	// 	return &models.AccessTokenPayload{}, err2
-	// }
-
 	if err4 := json.Unmarshal(respBytes, &payload); err4 != nil {
 		return nil, err4
 	}
@@ -116,6 +110,5 @@ func InitDB() (*gorm.DB, error) {
 	if err1 := db.AutoMigrate(&models.User{}); err1 != nil {
 		return nil, err1
 	}
-	fmt.Print("mode migration success")
 	return db, nil
 }

@@ -97,15 +97,13 @@ func (rp repo) CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Print("state fetched from database")
-	fmt.Printf("\n--------------------------------")
+	fmt.Printf("state fetched from database. \n")
 
 	//compare state values.
 	if state != DBstate {
-		log.Fatal("state mismatch")
+		log.Fatal("state mismatched")
 	}
-	fmt.Print("state matched")
-	fmt.Printf("\n")
+	fmt.Print("state MATCHED. \n")
 
 	//Exchange authorization code for access token and refresh token.
 	tokenPayload, err1 := utils.GetAccessToken(authCode)
@@ -113,8 +111,7 @@ func (rp repo) CallbackHandler(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err1)
 	}
 	if tokenPayload == nil {
-		fmt.Print("no access and refresh tokens.")
-		fmt.Printf("\n")
+		fmt.Printf("no access and refresh tokens. \n")
 	}
 
 	json.NewEncoder(w).Encode(tokenPayload)

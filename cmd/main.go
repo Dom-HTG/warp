@@ -27,7 +27,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Database initialized and connected.")
+	fmt.Printf("Database initialized and connected. \n")
+	fmt.Print("model migration success. \n")
 
 	//depependency injection.
 	controller := controllers.NewRepo(db)
@@ -39,7 +40,7 @@ func main() {
 
 	//Run the server.
 	port := os.Getenv("APP_PORT")
-	fmt.Printf("server is running on port %s\n", port)
+	fmt.Printf("server is running on port %s \n", port)
 	err1 := http.ListenAndServe(fmt.Sprintf(":%s", port), r)
 	if err1 != nil {
 		log.Fatal(err1)
