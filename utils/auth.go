@@ -2,9 +2,13 @@ package utils
 
 import (
 	"crypto/rand"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+
+	// "encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -40,24 +44,38 @@ func GetAccessToken(authCode string) (*models.AccessTokenPayload, error) {
 	//Make http request to url.
 	req, err := http.NewRequest(http.MethodPost, exURL, body)
 	if err != nil {
-		return &models.AccessTokenPayload{}, err
+		return nil, err
 	}
 
 	//Set headers.
-	req.Header.Set("Content_Type", " application/x-www-form-urlencoded")
-	req.SetBasicAuth(clientID, clientSecret)
+	req.Header.Set("Content-Type", " application/x-www-form-urlencoded")
+	credentials := fmt.Sprintf("%s:%s", clientID, clientSecret)
+	encString := base64.StdEncoding.EncodeToString([]byte(credentials))
+	req.Header.Set("Authorization", fmt.Sprintf("Basic %s", encString))
 
 	//send request.
 	client := &http.Client{}
 	response, err1 := client.Do(req)
 	if err1 != nil {
-		return &models.AccessTokenPayload{}, err1
+		return nil, err1
 	}
-	// defer response.Body.Close()
+	defer response.Body.Close()
+
+	respBytes, err3 := io.ReadAll(response.Body)
+	if err3 != nil {
+		return nil, err3
+	}
+	fmt.Print(string(respBytes))
 
 	payload := &models.AccessTokenPayload{}
-	json.NewDecoder(response.Body).Decode(&payload)
-	fmt.Print(payload)
+	// err2 := json.NewDecoder(response.Body).Decode(&payload)
+	// if err2 != nil {
+	// 	return &models.AccessTokenPayload{}, err2
+	// }
+
+	if err4 := json.Unmarshal(respBytes, &payload); err4 != nil {
+		return nil, err4
+	}
 
 	return payload, nil
 }

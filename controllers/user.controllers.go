@@ -98,21 +98,26 @@ func (rp repo) CallbackHandler(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 	fmt.Print("state fetched from database")
+	fmt.Printf("\n--------------------------------")
 
 	//compare state values.
 	if state != DBstate {
 		log.Fatal("state mismatch")
 	}
 	fmt.Print("state matched")
+	fmt.Printf("\n")
 
 	//Exchange authorization code for access token and refresh token.
 	tokenPayload, err1 := utils.GetAccessToken(authCode)
 	if err1 != nil {
 		log.Fatal(err1)
 	}
+	if tokenPayload == nil {
+		fmt.Print("no access and refresh tokens.")
+		fmt.Printf("\n")
+	}
 
 	json.NewEncoder(w).Encode(tokenPayload)
-	w.WriteHeader(http.StatusOK)
 }
 
 func (rp repo) HomeHandler(w http.ResponseWriter, r *http.Request) {
