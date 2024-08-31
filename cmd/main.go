@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/Dom-HTG/warp/controllers"
+	"github.com/Dom-HTG/warp/middlewares"
 	"github.com/Dom-HTG/warp/utils"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
@@ -33,10 +34,19 @@ func main() {
 	//depependency injection.
 	controller := controllers.NewRepo(db)
 
-	//Handle request multiplexing.
+	//Auth routes.
 	r.HandleFunc("/signin", controller.SignInHandler).Methods("GET")
 	r.HandleFunc("/callback", controller.CallbackHandler).Methods("GET")
+
 	r.HandleFunc("/home", controller.HomeHandler).Methods("GET")
+
+	//Data retrieval routes.
+	protected := r.PathPrefix("/home").Subrouter()
+	protected.Use(middlewares.AddTokenToContext)
+	protected.HandleFunc("/profile", controllers.ProfileHandler).Methods("GET")
+
+	//Spotify Query routes.
+	r.HandleFunc("/home/user-profile", controllers.ProfileHandler).Methods("GET")
 
 	//Run the server.
 	port := os.Getenv("APP_PORT")

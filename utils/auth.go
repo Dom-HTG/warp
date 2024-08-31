@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 
-	// "encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -50,7 +49,7 @@ func GetAccessToken(authCode string) (*models.AccessTokenPayload, error) {
 	//Set headers.
 	req.Header.Set("Content-Type", " application/x-www-form-urlencoded")
 	credentials := fmt.Sprintf("%s:%s", clientID, clientSecret)
-	encString := base64.StdEncoding.EncodeToString([]byte(credentials))
+	encString := base64.StdEncoding.EncodeToString([]byte(credentials)) //Encodes the basic auth credentials.
 	req.Header.Set("Authorization", fmt.Sprintf("Basic %s", encString))
 
 	//send request.
@@ -111,4 +110,35 @@ func InitDB() (*gorm.DB, error) {
 		return nil, err1
 	}
 	return db, nil
+}
+
+func GetUserProfile(accessToken string) (*models.UserProfile, error) {
+	apiURL := os.Getenv("API_ADDRESS")
+	var profileURL string = fmt.Sprintf("%s/v1/me", apiURL)
+	req, err := http.NewRequest(http.MethodPost, profileURL, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var auth string = fmt.Sprintf("Bearer %s", accessToken)
+	req.Header.Set("Authorization", auth)
+
+	Client := &http.Client{}
+	resp, err1 := Client.Do(req)
+	if err != nil {
+		return nil, err1
+	}
+	defer resp.Body.Close()
+
+	respBytes, err2 := io.ReadAll(resp.Body)
+	if err2 != nil {
+		return nil, err2
+	}
+
+	var ProfileResponse *models.UserProfile
+	if err3 := json.Unmarshal(respBytes, &ProfileResponse); err3 != nil {
+		return nil, err3
+	}
+
+	return ProfileResponse, nil
 }
