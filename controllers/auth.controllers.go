@@ -115,13 +115,18 @@ func (rp repo) CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//token data to be committed to context.
+	if tokenPayload == nil {
+		log.Fatal("access token payload is empty \n")
+	}
 	tokenContext := &models.TokenContext{
 		AccessToken:  tokenPayload.AccessToken,
 		RefreshToken: tokenPayload.RefreshToken,
 	}
 
 	//commit token to context.
-	ctx := context.WithValue(r.Context(), "access_token", tokenContext)
+	type tokenKey string
+	var accessToken tokenKey = "access_token"
+	ctx := context.WithValue(r.Context(), accessToken, tokenContext)
 	ProfileHandler(w, r.WithContext(ctx))
 
 	http.Redirect(w, r, "/home", http.StatusMovedPermanently)
