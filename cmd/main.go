@@ -34,6 +34,9 @@ func main() {
 	//depependency injection.
 	controller := controllers.NewRepo(db)
 
+	//Apply middleware.
+	r.Use(middlewares.AddTokenToContext)
+
 	//Auth routes.
 	r.HandleFunc("/signin", controller.SignInHandler).Methods("GET")
 	r.HandleFunc("/callback", controller.CallbackHandler).Methods("GET")
@@ -41,9 +44,7 @@ func main() {
 	r.HandleFunc("/home", controller.HomeHandler).Methods("GET")
 
 	//Data retrieval routes.
-	protected := r.PathPrefix("/home").Subrouter()
-	protected.Use(middlewares.AddTokenToContext)
-	protected.HandleFunc("/profile", controllers.ProfileHandler).Methods("GET")
+	r.HandleFunc("/profile", controllers.ProfileHandler).Methods("GET")
 
 	//Spotify Query routes.
 	r.HandleFunc("/home/user-profile", controllers.ProfileHandler).Methods("GET")

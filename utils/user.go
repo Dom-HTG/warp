@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,10 +11,10 @@ import (
 	"github.com/Dom-HTG/warp/models"
 )
 
-func GetUserProfile(accessToken string) (*models.UserProfile, error) {
+func GetUserProfile(accessToken string, ctx context.Context) (*models.UserProfile, error) {
 	apiURL := os.Getenv("API_ADDRESS")
 	var profileURL string = fmt.Sprintf("%s/v1/me", apiURL)
-	req, err := http.NewRequest(http.MethodPost, profileURL, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, profileURL, nil)
 	if err != nil {
 		return nil, err
 	}

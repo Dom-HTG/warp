@@ -106,7 +106,7 @@ func (rp repo) CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Print("state MATCHED. \n")
 
 	//Exchange authorization code for access token and refresh token.
-	tokenPayload, err1 := utils.GetAccessToken(authCode)
+	tokenPayload, err1 := utils.GetAccessToken(authCode, r.Context())
 	if err1 != nil {
 		log.Fatal(err1)
 	}
@@ -115,18 +115,21 @@ func (rp repo) CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	if tokenPayload == nil {
 		log.Fatal("access token payload is empty \n")
 	}
-	tokenContext := &models.TokenContext{
-		AccessToken:  tokenPayload.AccessToken,
-		RefreshToken: tokenPayload.RefreshToken,
-	}
+	// tokenContext := &models.TokenContext{
+	// 	AccessToken:  tokenPayload.AccessToken,
+	// 	RefreshToken: tokenPayload.RefreshToken,
+	// }
+
+	accessToken := tokenPayload.AccessToken
 
 	//commit token to context.
 	type tokenKey string
-	var accessToken tokenKey = "access_token"
-	ctx := context.WithValue(r.Context(), accessToken, tokenContext)
+	var token tokenKey = "access_token"
+	ctx := context.WithValue(r.Context(), token, accessToken)
+
 	ProfileHandler(w, r.WithContext(ctx))
 
-	http.Redirect(w, r, "/home", http.StatusMovedPermanently)
+	http.Redirect(w, r.WithContext(ctx), "/user-profile", http.StatusFound)
 }
 
 func (rp repo) HomeHandler(w http.ResponseWriter, r *http.Request) {

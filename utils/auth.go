@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/hex"
@@ -18,7 +19,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func GetAccessToken(authCode string) (*models.AccessTokenPayload, error) {
+func GetAccessToken(authCode string, ctx context.Context) (*models.AccessTokenPayload, error) {
 	exURL := os.Getenv("EXCHANGE_URL")
 	redirectURI := os.Getenv("REDIRECT_URI")
 	clientID := os.Getenv("CLIENT_ID")
@@ -41,7 +42,7 @@ func GetAccessToken(authCode string) (*models.AccessTokenPayload, error) {
 	body := strings.NewReader(encodedForm)
 
 	//Make http request to url.
-	req, err := http.NewRequest(http.MethodPost, exURL, body)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, exURL, body)
 	if err != nil {
 		return nil, err
 	}
