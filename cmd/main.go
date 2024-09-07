@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/Dom-HTG/warp/controllers"
-	"github.com/Dom-HTG/warp/middlewares"
 	"github.com/Dom-HTG/warp/utils"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
@@ -35,7 +34,6 @@ func main() {
 	controller := controllers.NewRepo(db)
 
 	//Apply middleware.
-	r.Use(middlewares.AddTokenToContext)
 
 	//Auth routes.
 	r.HandleFunc("/signin", controller.SignInHandler).Methods("GET")
@@ -44,10 +42,8 @@ func main() {
 	r.HandleFunc("/home", controller.HomeHandler).Methods("GET")
 
 	//Data retrieval routes.
-	r.HandleFunc("/profile", controllers.ProfileHandler).Methods("GET")
-
-	//Spotify Query routes.
-	r.HandleFunc("/home/user-profile", controllers.ProfileHandler).Methods("GET")
+	user := r.PathPrefix("/user").Subrouter()
+	user.HandleFunc("/profile", controllers.ProfileHandler).Methods("GET")
 
 	//Run the server.
 	port := os.Getenv("APP_PORT")
