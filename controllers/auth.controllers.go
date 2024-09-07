@@ -110,9 +110,6 @@ func (rp repo) CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	if err1 != nil {
 		log.Fatal(err1)
 	}
-	if tokenPayload == nil {
-		fmt.Printf("no access and refresh tokens. \n")
-	}
 
 	//token data to be committed to context.
 	if tokenPayload == nil {
