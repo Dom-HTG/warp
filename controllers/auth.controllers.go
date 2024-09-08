@@ -3,13 +3,13 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
 
 	"github.com/Dom-HTG/warp/models"
 	"github.com/Dom-HTG/warp/utils"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -35,7 +35,7 @@ func (rp repo) SignInHandler(w http.ResponseWriter, r *http.Request) {
 	baseURL := os.Getenv("BASE_URL")
 	u, err := url.Parse(baseURL)
 	if err != nil {
-		log.Fatal(err)
+		logrus.Errorf("Error parsing auth base URL: %v", err)
 	}
 
 	stateData := utils.GenerateState()
@@ -59,8 +59,9 @@ func (rp repo) SignInHandler(w http.ResponseWriter, r *http.Request) {
 
 	tx := rp.db.Create(&state)
 	if tx.Error != nil {
-		log.Fatalf("unable to save state to DB: %v", tx.Error)
+		logrus.Errorf("Error storing state to databse: %v", tx.Error)
 	}
+	logrus.Info("state saved to database")
 
 	//store state ID in global variable.
 	globalStateID = state.ID
@@ -95,25 +96,26 @@ func (rp repo) CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	//get state values from database.
 	DBstate, err := utils.GetStateDB(rp.db, id)
 	if err != nil {
-		log.Fatal(err)
+		logrus.Errorf("Error retrieving state from database: %v", err)
 	}
 	fmt.Printf("state fetched from database. \n")
 
 	//compare state values.
 	if state != DBstate {
-		log.Fatal("state mismatched")
+		logrus.Fatal("State mismatch")
 	}
-	fmt.Print("state MATCHED. \n")
+	logrus.Info("State values matched")
 
 	//Exchange authorization code for access token and refresh token.
 	tokenPayload, err1 := utils.GetAccessToken(authCode, r.Context())
 	if err1 != nil {
-		log.Fatal(err1)
+		logrus.Errorf("Error getting access token: %v", err1)
 	}
+	logrus.Info("Access token token Obtained")
 
 	//token data to be committed to context.
 	if tokenPayload == nil {
-		log.Fatal("access token payload is empty \n")
+		logrus.Fatal("Access token payload is empty")
 	}
 	// tokenContext := &models.TokenContext{
 	// 	AccessToken:  tokenPayload.AccessToken,
