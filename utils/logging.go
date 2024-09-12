@@ -12,8 +12,11 @@ func InitLogger() {
 	if err != nil {
 		log.Fatalf("could not open log file: %v", err)
 	}
+	defer logfile.Close()
 
 	//Initialize logger with appropriate settings.
 	logrus.SetLevel(logrus.DebugLevel)
 	log.SetOutput(logfile)
+
+	logrus.Info("Logger initialized successfully.")
 }

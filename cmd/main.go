@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/Dom-HTG/warp/controllers"
+	"github.com/Dom-HTG/warp/middlewares"
 	"github.com/Dom-HTG/warp/utils"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
@@ -47,6 +48,7 @@ func main() {
 
 	//Data retrieval routes.
 	user := r.PathPrefix("/user").Subrouter()
+	user.Use(middlewares.AddTokenToContext)
 	user.HandleFunc("/profile", controllers.ProfileHandler).Methods("GET")
 
 	//Run the server.
@@ -54,7 +56,7 @@ func main() {
 	logrus.Info("Server is running on port: ", port)
 	err1 := http.ListenAndServe(fmt.Sprintf(":%s", port), r)
 	if err1 != nil {
-		logrus.Errorf("Error starting server: ", err1)
+		logrus.Error("Error starting server: ", err1)
 	}
 
 }

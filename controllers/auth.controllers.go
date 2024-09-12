@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"os"
 
+	"github.com/Dom-HTG/warp/middlewares"
 	"github.com/Dom-HTG/warp/models"
 	"github.com/Dom-HTG/warp/utils"
 	"github.com/sirupsen/logrus"
@@ -117,23 +118,23 @@ func (rp repo) CallbackHandler(w http.ResponseWriter, r *http.Request) {
 	if tokenPayload == nil {
 		logrus.Fatal("Access token payload is empty")
 	}
-	// tokenContext := &models.TokenContext{
-	// 	AccessToken:  tokenPayload.AccessToken,
-	// 	RefreshToken: tokenPayload.RefreshToken,
-	// }
 
 	accessToken := tokenPayload.AccessToken
 
 	//commit token to context.
-	type tokenKey string
-	var token tokenKey = "access_token"
-	ctx := context.WithValue(r.Context(), token, accessToken)
+	ctx := context.WithValue(r.Context(), utils.Token, accessToken)
 
-	ProfileHandler(w, r.WithContext(ctx))
+	// ProfileHandler(w, r.WithContext(ctx))
+	cx := r.WithContext(ctx)
 
-	http.Redirect(w, r.WithContext(ctx), "/user-profile", http.StatusFound)
+	//passing updated context to the context middleware.
+	middlewares.AddTokenToContext(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		logrus.Info("updated context passed to context middleware")
+	})).ServeHTTP(w, cx)
+
+	http.Redirect(w, cx, "/home", http.StatusFound)
 }
 
 func (rp repo) HomeHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("welcome to warp home"))
+	w.Write([]byte("welcome to warp home. You have authorized access to your spotify listening data"))
 }
